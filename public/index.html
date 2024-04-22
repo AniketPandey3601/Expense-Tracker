@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body style="margin: 0">
+  <form id="expenseForm">
+    <label for="username">Choose expense amount:</label>
+    <input class="expense" type="number" name="price" id="price" />
+    <label for="description">Choose Description:</label>
+    <input class="expense" type="text" name="description" id="description" />
+    <label for="select-category">Choose category</label>
+    <select class="expense" name="category" id="select-category">
+      <option value="car">Car</option>
+      <option value="petrol">Petrol</option>
+      <option value="education">Education</option>
+      <option value="electricity-bill">Electricity Bill</option>
+    </select>
+    <button type="submit">Add expense</button>
+  </form>
+  <h2>User expense</h2>
+  <ul id="userList"></ul>
+
+  <script>
+    const expenseForm = document.getElementById('expenseForm');
+    const userList = document.getElementById('userList');
+
+    // Function to handle form submission
+    expenseForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(event.target);
+      const price = formData.get('price');
+      const description = formData.get('description');
+      const category = formData.get('category');
+
+      try {
+        const response = await fetch('/api/expense', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ price, description, category })
+        });
+
+        if (response.ok) {
+          // If expense added successfully, update UI
+          const listItem = document.createElement('li');
+          listItem.textContent = `${price} --- ${description} --- ${category}`;
+          userList.appendChild(listItem);
+          event.target.reset(); // Reset form
+        } else {
+          console.error('Failed to add expense:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error adding expense:', error);
+      }
+    });
+
+    // Function to fetch and display expenses
+    async function fetchExpenses() {
+      try {
+        const response = await fetch('/api/expenses');
+        if (response.ok) {
+          const expenses = await response.json();
+          expenses.forEach(expense => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${expense.price} --- ${expense.description} --- ${expense.category}`;
+            userList.appendChild(listItem);
+          });
+        } else {
+          console.error('Failed to fetch expenses:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching expenses:', error);
+      }
+    }
+
+    // Fetch expenses when the page loads
+    fetchExpenses();
+  </script>
+</body>
+</html>
